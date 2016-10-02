@@ -13,6 +13,7 @@ func TestAddCandidate(t *testing.T) {
 	c := test.NewTestClient()
 	name := "foo"
 
+	// add ok
 	resp, err := c.AddCandidate(
 		gouken.Context(),
 		&pb.AddCandidateRequest{
@@ -22,6 +23,7 @@ func TestAddCandidate(t *testing.T) {
 	assert.Nil(t, err)
 	t.Log("resp", resp)
 
+	// add duplicate
 	resp, err = c.AddCandidate(
 		gouken.Context(),
 		&pb.AddCandidateRequest{
