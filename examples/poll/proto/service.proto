@@ -1,0 +1,36 @@
+syntax = "proto3";
+package proto;
+
+service Poll {
+  rpc AddCandidate (AddCandidateRequest) returns (CandidateResponse) {}
+  rpc DeleteCandidate (DeleteCandidateRequest) returns (DeleteCandidateResponse) {}
+  rpc ListCandidate (ListCandidateRequest) returns (ListCandidateResponse) {}
+}
+
+message Candidate {
+  string name = 1;
+  int32 votes = 2;
+  int32 updated_at = 3;
+}
+
+message AddCandidateRequest {
+  string name = 1;
+}
+
+message CandidateResponse {
+  Candidate data = 1;
+}
+
+message DeleteCandidateRequest {
+  string name = 1;
+}
+
+message DeleteCandidateResponse {
+}
+
+message ListCandidateRequest {
+}
+
+message ListCandidateResponse {
+  repeated Candidate data = 1;
+}
