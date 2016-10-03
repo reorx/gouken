@@ -10,7 +10,7 @@ import (
 )
 
 func TestAddCandidate(t *testing.T) {
-	c := test.NewTestClient()
+	c := test.GetClient()
 	name := "foo"
 
 	// add ok

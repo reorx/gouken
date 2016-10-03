@@ -12,7 +12,7 @@ proto:
 test: test-candidate
 
 TESTBIN := go test -v
-export PROJECTPATH := $(shell pwd)
+export POLLPATH := $(shell pwd)
 
 test-candidate:
 	@echo

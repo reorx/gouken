@@ -5,8 +5,14 @@ import (
 	pb "github.com/reorx/gouken/examples/poll/proto"
 )
 
-// NewTestClient ...
-func NewTestClient() pb.PollClient {
+var client pb.PollClient
+
+// GetClient ...
+func GetClient() pb.PollClient {
+	return client
+}
+
+func init() {
 	app := poll.NewApp()
-	return pb.NewPollClient(app.Client())
+	client = pb.NewPollClient(app.Client())
 }
