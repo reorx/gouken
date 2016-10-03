@@ -26,9 +26,6 @@ type application struct {
 }
 
 func newApplication(opts ...Option) Application {
-	// read config
-	ReadConfig()
-
 	// init with config
 	a := &application{
 		Name:     confName(),

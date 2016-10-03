@@ -56,6 +56,9 @@ func MakeConfig(filename string, opts ...ConfOption) {
 	for _, o := range opts {
 		o()
 	}
+
+	// read config at last
+	ReadConfig()
 }
 
 func ConfPathEnv(n string) ConfOption {
