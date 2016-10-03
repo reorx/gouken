@@ -52,11 +52,12 @@ func newApplication(opts ...Option) Application {
 	// init server
 	a.server = grpc.NewServer(a.Sopts...)
 
+	// print application
+	log.Printf("%v created\n", a)
 	return a
 }
 
-func (a *application) Configure(opts ...Option) {
-	// apply options
+func (a *application) UseOptions(opts ...Option) {
 	for _, o := range opts {
 		o(a)
 	}
