@@ -15,3 +15,7 @@ type Application interface {
 func NewApplication(opts ...Option) Application {
 	return newApplication(opts...)
 }
+
+func init() {
+	defineConfig()
+}
