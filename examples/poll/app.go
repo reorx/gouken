@@ -1,8 +1,6 @@
 package poll
 
 import (
-	"fmt"
-
 	"github.com/reorx/gouken"
 
 	pb "github.com/reorx/gouken/examples/poll/proto"
@@ -11,15 +9,16 @@ import (
 
 // NewApp ...
 func NewApp() gouken.Application {
-	InitConfig()
+	gouken.MakeConfig(
+		"config.yml",
+		gouken.ConfPathEnv("POLLPATH"),
+		gouken.ConfEnvPrefix("POLL"),
+		gouken.ConfBindEnv("debug"),
+	)
 
 	app := gouken.NewApplication(
 		gouken.Name("poll"),
-		gouken.Port(9090),
-		gouken.ConfLogLevel("log_level"),
 	)
-
-	fmt.Println(app)
 
 	// Register handler
 	pb.RegisterPollServer(app.Server(), new(service.Poll))
