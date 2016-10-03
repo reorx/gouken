@@ -63,7 +63,7 @@ func MakeConfig(filename string, opts ...ConfOption) {
 
 func ConfPathEnv(n string) ConfOption {
 	return func() {
-		p := os.Getenv("PROJECTPATH")
+		p := os.Getenv(n)
 		log.Printf("%v: %v\n", n, p)
 		if p != "" {
 			viper.AddConfigPath(p)
