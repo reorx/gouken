@@ -26,12 +26,16 @@ type application struct {
 }
 
 func newApplication(opts ...Option) Application {
-	// init with default values
+	// read config
+	ReadConfig()
+
+	// init with config
 	a := &application{
-		Host:     "localhost",
-		Port:     9000,
-		LogLevel: "INFO",
-		Debug:    true,
+		Name:     confName(),
+		Host:     confHost(),
+		Port:     confPort(),
+		LogLevel: confLogLevel(),
+		Debug:    confDebug(),
 	}
 
 	// apply options
