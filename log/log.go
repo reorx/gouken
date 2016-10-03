@@ -28,9 +28,7 @@ func Setup(lvl string) {
 		"DEBUG": logrus.DebugLevel,
 	}
 	lvlv, ok := lvlmap[lvl]
-	if ok {
-		log.Printf("set log level to %v \n", lvl)
-	} else {
+	if !ok {
 		log.Fatalf("log level %v not exist\n", lvl)
 	}
 	SetLogLevel(lvlv)
@@ -44,6 +42,7 @@ func Setup(lvl string) {
 
 // SetLogLevel ...
 func SetLogLevel(level logrus.Level) {
+	log.Printf("set log level = %v\n", level)
 	logger.Level = level
 }
 
