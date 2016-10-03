@@ -1,9 +1,5 @@
 package gouken
 
-import (
-	"github.com/spf13/viper"
-)
-
 /*
 Options:
 - Name
@@ -23,24 +19,10 @@ func Name(n string) Option {
 	}
 }
 
-// ConfName ...
-func ConfName(k string) Option {
-	return func(a *application) {
-		a.Name = viper.GetString(k)
-	}
-}
-
 // Host ...
 func Host(h string) Option {
 	return func(a *application) {
 		a.Host = h
-	}
-}
-
-// ConfHost ..
-func ConfHost(k string) Option {
-	return func(a *application) {
-		a.Host = viper.GetString(k)
 	}
 }
 
@@ -51,13 +33,6 @@ func Port(p int) Option {
 	}
 }
 
-// ConfPort ...
-func ConfPort(k string) Option {
-	return func(a *application) {
-		a.Port = viper.GetInt(k)
-	}
-}
-
 // LogLevel ...
 func LogLevel(l string) Option {
 	return func(a *application) {
@@ -65,23 +40,9 @@ func LogLevel(l string) Option {
 	}
 }
 
-// ConfLogLevel ...
-func ConfLogLevel(k string) Option {
-	return func(a *application) {
-		a.LogLevel = viper.GetString(k)
-	}
-}
-
 // Debug ...
 func Debug(d bool) Option {
 	return func(a *application) {
 		a.Debug = d
-	}
-}
-
-// ConfDebug ...
-func ConfDebug(k string) Option {
-	return func(a *application) {
-		a.Debug = viper.GetBool(k)
 	}
 }
