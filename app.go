@@ -14,11 +14,13 @@ import (
 
 type application struct {
 	// Options
-	Name     string
-	Host     string
-	Port     int
-	LogLevel string
-	Debug    bool
+	Name        string
+	Host        string
+	Port        int
+	LogLevel    string
+	LogFilename bool
+	LogResponse bool
+	Debug       bool
 	// Server
 	server *grpc.Server
 	Sopts  []grpc.ServerOption
@@ -28,11 +30,13 @@ type application struct {
 func newApplication(opts ...Option) Application {
 	// init with config
 	a := &application{
-		Name:     confName(),
-		Host:     confHost(),
-		Port:     confPort(),
-		LogLevel: confLogLevel(),
-		Debug:    confDebug(),
+		Name:        confName(),
+		Host:        confHost(),
+		Port:        confPort(),
+		LogLevel:    confLogLevel(),
+		LogFilename: confLogFilename(),
+		LogResponse: confLogResponse(),
+		Debug:       confDebug(),
 	}
 
 	// apply options
@@ -41,7 +45,7 @@ func newApplication(opts ...Option) Application {
 	}
 
 	// setup logging
-	glog.Setup(a.LogLevel)
+	glog.Setup(a.LogLevel, a.LogFilename)
 
 	// add interceptor
 	a.Sopts = append(a.Sopts, grpc.UnaryInterceptor(applicationInterceptor))

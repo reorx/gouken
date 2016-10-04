@@ -40,6 +40,20 @@ func LogLevel(l string) Option {
 	}
 }
 
+// LogFilename ..
+func LogFilename(l bool) Option {
+	return func(a *application) {
+		a.LogFilename = l
+	}
+}
+
+// LogResponse ..
+func LogResponse(l bool) Option {
+	return func(a *application) {
+		a.LogResponse = l
+	}
+}
+
 // Debug ...
 func Debug(d bool) Option {
 	return func(a *application) {

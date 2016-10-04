@@ -17,8 +17,10 @@ type Fields logrus.Fields
 // use ~ as prefix to make the kv show at the last sequence
 const fileKey = "~file"
 
+var logFilename bool
+
 // Setup logging config
-func Setup(lvl string) {
+func Setup(lvl string, lfn bool) {
 	lvlmap := map[string]logrus.Level{
 		"PANIC": logrus.PanicLevel,
 		"FATAL": logrus.FatalLevel,
@@ -32,6 +34,9 @@ func Setup(lvl string) {
 		log.Fatalf("log level %v not exist\n", lvl)
 	}
 	SetLogLevel(lvlv)
+
+	// set logFilename
+	logFilename = lfn
 
 	SetLogFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
@@ -60,7 +65,7 @@ func SetLogFormatter(formatter logrus.Formatter) {
 func Debug(args ...interface{}) {
 	if logger.Level >= logrus.DebugLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Debug(args)
 	}
 }
@@ -69,7 +74,7 @@ func Debug(args ...interface{}) {
 func DebugKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.DebugLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Debug(l)
 	}
 }
@@ -78,7 +83,7 @@ func DebugKV(l interface{}, f Fields) {
 func Info(args ...interface{}) {
 	if logger.Level >= logrus.InfoLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Info(args...)
 	}
 }
@@ -87,7 +92,7 @@ func Info(args ...interface{}) {
 func InfoKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.InfoLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Info(l)
 	}
 }
@@ -96,7 +101,7 @@ func InfoKV(l interface{}, f Fields) {
 func Warn(args ...interface{}) {
 	if logger.Level >= logrus.WarnLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Warn(args...)
 	}
 }
@@ -105,7 +110,7 @@ func Warn(args ...interface{}) {
 func WarnKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.WarnLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Warn(l)
 	}
 }
@@ -114,7 +119,7 @@ func WarnKV(l interface{}, f Fields) {
 func Error(args ...interface{}) {
 	if logger.Level >= logrus.ErrorLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Error(args...)
 	}
 }
@@ -123,7 +128,7 @@ func Error(args ...interface{}) {
 func ErrorKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.ErrorLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Error(l)
 	}
 }
@@ -132,7 +137,7 @@ func ErrorKV(l interface{}, f Fields) {
 func Fatal(args ...interface{}) {
 	if logger.Level >= logrus.FatalLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Fatal(args...)
 	}
 }
@@ -141,7 +146,7 @@ func Fatal(args ...interface{}) {
 func FatalKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.FatalLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Fatal(l)
 	}
 }
@@ -150,7 +155,7 @@ func FatalKV(l interface{}, f Fields) {
 func Panic(args ...interface{}) {
 	if logger.Level >= logrus.PanicLevel {
 		entry := logger.WithFields(logrus.Fields{})
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Panic(args...)
 	}
 }
@@ -159,8 +164,14 @@ func Panic(args ...interface{}) {
 func PanicKV(l interface{}, f Fields) {
 	if logger.Level >= logrus.PanicLevel {
 		entry := logger.WithFields(logrus.Fields(f))
-		entry.Data[fileKey] = fileInfo(2)
+		fillentry(entry)
 		entry.Panic(l)
+	}
+}
+
+func fillentry(e *logrus.Entry) {
+	if logFilename {
+		e.Data[fileKey] = fileInfo(2)
 	}
 }
 
