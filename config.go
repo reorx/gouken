@@ -17,6 +17,7 @@ func defineConfig() {
 	viper.SetDefault("port", 20000)
 	viper.SetDefault("log_level", "INFO")
 	viper.SetDefault("log_filename", false)
+	viper.SetDefault("log_request", false)
 	viper.SetDefault("log_response", false)
 	viper.SetDefault("debug", true)
 }
@@ -39,6 +40,10 @@ func confLogLevel() string {
 
 func confLogFilename() bool {
 	return viper.GetBool("log_filename")
+}
+
+func confLogRequest() bool {
+	return viper.GetBool("log_request")
 }
 
 func confLogResponse() bool {

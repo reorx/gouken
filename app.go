@@ -19,6 +19,7 @@ type application struct {
 	Port        int
 	LogLevel    string
 	LogFilename bool
+	LogRequest  bool
 	LogResponse bool
 	Debug       bool
 	// Server
@@ -26,6 +27,9 @@ type application struct {
 	Sopts  []grpc.ServerOption
 	// Client
 }
+
+var logResponse bool
+var logRequest bool
 
 func newApplication(opts ...Option) Application {
 	// init with config
@@ -35,6 +39,7 @@ func newApplication(opts ...Option) Application {
 		Port:        confPort(),
 		LogLevel:    confLogLevel(),
 		LogFilename: confLogFilename(),
+		LogRequest:  confLogRequest(),
 		LogResponse: confLogResponse(),
 		Debug:       confDebug(),
 	}
@@ -50,9 +55,6 @@ func newApplication(opts ...Option) Application {
 	// add interceptor
 	a.Sopts = append(a.Sopts, grpc.UnaryInterceptor(applicationInterceptor))
 
-	// init server
-	a.server = grpc.NewServer(a.Sopts...)
-
 	// print application
 	log.Printf("%v created\n", a)
 	return a
@@ -65,6 +67,14 @@ func (a *application) UseOptions(opts ...Option) {
 }
 
 func (a *application) Server() *grpc.Server {
+	if a.server == nil {
+		// set logRequest & logResponse
+		logRequest = a.LogRequest
+		logResponse = a.LogResponse
+
+		// init server
+		a.server = grpc.NewServer(a.Sopts...)
+	}
 	return a.server
 }
 
@@ -106,12 +116,29 @@ func applicationInterceptor(ctx context.Context, req interface{},
 	// glog.Info("get request in interceptor 0 ", handler, req, ctx, info)
 	// glog.Info("get request in interceptor 1 ", ctx)
 	// glog.Info("get request in interceptor 2 ", info)
-	glog.InfoKV("/"+method+" start", glog.Fields{"req": req, "method": method})
+	reqf := glog.Fields{"method": method}
+	if logRequest {
+		reqf["request"] = req
+	}
+	glog.InfoKV("/"+method+" received", reqf)
 
 	resp, err = handler(ctx, req)
 
 	// log err
+	resps := "/" + method + " responded"
+	if err != nil {
+		respf := glog.Fields{"err": err, "method": method}
+		if logResponse {
+			respf["response"] = resp
+		}
+		glog.ErrorKV(resps, respf)
+	} else {
+		if logResponse {
+			glog.InfoKV(resps, glog.Fields{"response": resp, "method": method})
+		} else {
+			glog.Info(resps)
+		}
+	}
 
-	glog.InfoKV("/"+method+" end", glog.Fields{"resp": resp, "method": method})
 	return resp, err
 }

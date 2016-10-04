@@ -47,6 +47,13 @@ func LogFilename(l bool) Option {
 	}
 }
 
+// LogRequest ..
+func LogRequest(l bool) Option {
+	return func(a *application) {
+		a.LogResponse = l
+	}
+}
+
 // LogResponse ..
 func LogResponse(l bool) Option {
 	return func(a *application) {
