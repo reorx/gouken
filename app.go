@@ -131,12 +131,10 @@ func applicationInterceptor(ctx context.Context, req interface{},
 		if logResponse {
 			respf["response"] = resp
 		}
-		glog.ErrorKV(resps, respf)
+		glog.ErrorKV(resps+" with error", respf)
 	} else {
 		if logResponse {
 			glog.InfoKV(resps, glog.Fields{"response": resp, "method": method})
-		} else {
-			glog.Info(resps)
 		}
 	}
 
