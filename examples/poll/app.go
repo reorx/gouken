@@ -7,8 +7,25 @@ import (
 	"github.com/reorx/gouken/examples/poll/service"
 )
 
-// NewApp ...
-func NewApp() gouken.Application {
+var app gouken.Application
+var client pb.PollClient
+
+// App ...
+func App() gouken.Application {
+	Init()
+	return app
+}
+
+// Client ..
+func Client() pb.PollClient {
+	if client == nil {
+		client = pb.NewPollClient(app.Client())
+	}
+	return client
+}
+
+// Init ..
+func Init() {
 	gouken.MakeConfig(
 		"config.yml",
 		gouken.ConfPathEnv("POLLPATH"),
@@ -16,12 +33,10 @@ func NewApp() gouken.Application {
 		gouken.ConfBindEnv("debug"),
 	)
 
-	app := gouken.NewApplication(
+	app = gouken.NewApplication(
 		gouken.Name("poll"),
 	)
 
 	// Register handler
 	pb.RegisterPollServer(app.Server(), new(service.Poll))
-
-	return app
 }

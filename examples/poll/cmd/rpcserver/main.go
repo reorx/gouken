@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
-	app := poll.NewApp()
+	app := poll.App()
+	app.PrintConfig()
 	app.Run()
 }

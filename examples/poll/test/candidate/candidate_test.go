@@ -4,13 +4,17 @@ import (
 	"testing"
 
 	"github.com/reorx/gouken"
+	"github.com/reorx/gouken/examples/poll"
 	pb "github.com/reorx/gouken/examples/poll/proto"
-	"github.com/reorx/gouken/examples/poll/test"
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	poll.Init()
+}
+
 func TestAddCandidate(t *testing.T) {
-	c := test.GetClient()
+	c := poll.Client()
 	name := "foo"
 
 	// add ok
