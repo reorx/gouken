@@ -1,5 +1,9 @@
 package gouken
 
+/*
+config.go is decoupled from app.go
+*/
+
 import (
 	"fmt"
 	"log"
@@ -109,6 +113,9 @@ func ReadConfig() {
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
+}
+
+func PrintConfig() {
 	log.Printf("Config:\n%v", GetConfigString("  "))
 }
 

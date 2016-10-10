@@ -8,6 +8,7 @@ type Application interface {
 	UseOptions(opts ...Option)
 	Server() *grpc.Server
 	Client() *grpc.ClientConn
+	PrintConfig()
 	String() string
 }
 

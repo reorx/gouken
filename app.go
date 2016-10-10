@@ -90,6 +90,10 @@ func (a *application) Run() {
 	a.run()
 }
 
+func (a *application) PrintConfig() {
+	PrintConfig()
+}
+
 func (a *application) String() string {
 	return fmt.Sprintf("<application: Name=%v Host=%v Port=%v LogLevel=%v Debug=%v>",
 		a.Name, a.Host, a.Port, a.LogLevel, a.Debug)
