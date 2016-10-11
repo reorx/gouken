@@ -19,6 +19,7 @@ func defineConfig() {
 	viper.SetDefault("name", "")
 	viper.SetDefault("host", "localhost")
 	viper.SetDefault("port", 20000)
+	viper.SetDefault("client_address", "")
 	viper.SetDefault("log_level", "INFO")
 	viper.SetDefault("log_filename", false)
 	viper.SetDefault("log_request", false)
@@ -36,6 +37,10 @@ func confHost() string {
 
 func confPort() int {
 	return viper.GetInt("port")
+}
+
+func confClientAddress() string {
+	return viper.GetString("client_address")
 }
 
 func confLogLevel() string {

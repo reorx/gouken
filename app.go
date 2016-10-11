@@ -14,14 +14,15 @@ import (
 
 type application struct {
 	// Options
-	Name        string
-	Host        string
-	Port        int
-	LogLevel    string
-	LogFilename bool
-	LogRequest  bool
-	LogResponse bool
-	Debug       bool
+	Name          string
+	Host          string
+	Port          int
+	ClientAddress string
+	LogLevel      string
+	LogFilename   bool
+	LogRequest    bool
+	LogResponse   bool
+	Debug         bool
 	// Server
 	server *grpc.Server
 	Sopts  []grpc.ServerOption
@@ -34,14 +35,15 @@ var logRequest bool
 func newApplication(opts ...Option) Application {
 	// init with config
 	a := &application{
-		Name:        confName(),
-		Host:        confHost(),
-		Port:        confPort(),
-		LogLevel:    confLogLevel(),
-		LogFilename: confLogFilename(),
-		LogRequest:  confLogRequest(),
-		LogResponse: confLogResponse(),
-		Debug:       confDebug(),
+		Name:          confName(),
+		Host:          confHost(),
+		Port:          confPort(),
+		ClientAddress: confClientAddress(),
+		LogLevel:      confLogLevel(),
+		LogFilename:   confLogFilename(),
+		LogRequest:    confLogRequest(),
+		LogResponse:   confLogResponse(),
+		Debug:         confDebug(),
 	}
 
 	// apply options
@@ -79,10 +81,15 @@ func (a *application) Server() *grpc.Server {
 }
 
 func (a *application) Client() *grpc.ClientConn {
+	addr := a.ClientAddress
+	if addr == "" {
+		addr = a.addr()
+	}
 	conn, err := grpc.Dial(a.addr(), grpc.WithInsecure())
 	if err != nil {
-		glog.FatalKV("failed to connect", glog.Fields{"err": err})
+		glog.FatalKV("failed to connect", glog.Fields{"err": err, "address": addr})
 	}
+	log.Printf("client connected to %v", addr)
 	return conn
 }
 
@@ -104,11 +111,12 @@ func (a *application) addr() string {
 }
 
 func (a *application) run() {
+	addr := a.addr()
 	lis, err := net.Listen("tcp", a.addr())
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		glog.FatalKV("failed to listen: %v", glog.Fields{"err": err, "address": addr})
 	}
-	log.Printf("listening on %v\n", lis.Addr())
+	log.Printf("server listening on %v\n", addr)
 
 	a.server.Serve(lis)
 }

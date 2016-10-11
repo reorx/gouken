@@ -40,6 +40,13 @@ func LogLevel(l string) Option {
 	}
 }
 
+// ClientAddress ..
+func ClientAddress(s string) Option {
+	return func(a *application) {
+		a.ClientAddress = s
+	}
+}
+
 // LogFilename ..
 func LogFilename(l bool) Option {
 	return func(a *application) {
