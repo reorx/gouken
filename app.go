@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 
 	glog "github.com/reorx/gouken/log"
+	"github.com/reorx/gouken/utils"
 	"google.golang.org/grpc"
 )
 
@@ -126,29 +127,32 @@ func applicationInterceptor(ctx context.Context, req interface{},
 	s := strings.Split(info.FullMethod, "/")
 	method := s[len(s)-1]
 	// glog.Info("get request in interceptor 0 ", handler, req, ctx, info)
-	// glog.Info("get request in interceptor 1 ", ctx)
-	// glog.Info("get request in interceptor 2 ", info)
-	reqf := glog.Fields{"method": method}
-	if logRequest {
-		reqf["request"] = req
-	}
-	glog.InfoKV("/"+method+" received", reqf)
+	// glog.Info("get request in interceptor 1 ", info)
+
+	// call handler
+	t0 := utils.NowTimestamp(13)
 
 	resp, err = handler(ctx, req)
 
-	// log err
-	resps := "/" + method + " responded"
-	if err != nil {
-		respf := glog.Fields{"err": err, "method": method}
-		if logResponse {
-			respf["response"] = resp
-		}
-		glog.ErrorKV(resps+" with error", respf)
-	} else {
-		if logResponse {
-			glog.InfoKV(resps, glog.Fields{"response": resp, "method": method})
-		}
+	tc0 := utils.NowTimestamp(13) - t0
+
+	// log the call
+	kvs := glog.Fields{
+		"method": method,
+		"ms":     tc0,
 	}
+	if logRequest {
+		kvs["request"] = req
+	}
+	if logResponse {
+		kvs["response"] = resp
+	}
+	logFunc := glog.InfoKV
+	if err != nil {
+		kvs["err"] = err
+		logFunc = glog.ErrorKV
+	}
+	logFunc("/"+method+" called", kvs)
 
 	return resp, err
 }
