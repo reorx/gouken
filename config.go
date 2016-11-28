@@ -63,8 +63,10 @@ func confDebug() bool {
 	return viper.GetBool("debug")
 }
 
+// ConfOption ..
 type ConfOption func()
 
+// MakeConfig ..
 func MakeConfig(filename string, opts ...ConfOption) {
 	sp := strings.Split(filename, ".")
 	if len(sp) != 2 {
@@ -85,6 +87,7 @@ func MakeConfig(filename string, opts ...ConfOption) {
 	ReadConfig()
 }
 
+// ConfPathEnv ..
 func ConfPathEnv(n string) ConfOption {
 	return func() {
 		p := os.Getenv(n)
@@ -95,24 +98,28 @@ func ConfPathEnv(n string) ConfOption {
 	}
 }
 
+// ConfEnvPrefix ..
 func ConfEnvPrefix(n string) ConfOption {
 	return func() {
 		viper.SetEnvPrefix(n)
 	}
 }
 
+// ConfBindEnv ..
 func ConfBindEnv(n string) ConfOption {
 	return func() {
 		viper.BindEnv(n)
 	}
 }
 
+// ConfNew ..
 func ConfNew(k string, v interface{}) ConfOption {
 	return func() {
 		viper.SetDefault(k, v)
 	}
 }
 
+// ReadConfig ..
 func ReadConfig() {
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
@@ -120,6 +127,7 @@ func ReadConfig() {
 	}
 }
 
+// PrintConfig ..
 func PrintConfig() {
 	log.Printf("Config:\n%v", GetConfigString("  "))
 }

@@ -25,8 +25,10 @@ type application struct {
 	LogResponse   bool
 	Debug         bool
 	// Server
-	server *grpc.Server
-	Sopts  []grpc.ServerOption
+	server        *grpc.Server
+	Sopts         []grpc.ServerOption
+	stopCallbacks []AppCallback
+	listener      net.Listener
 	// Client
 }
 
@@ -45,6 +47,7 @@ func newApplication(opts ...Option) Application {
 		LogRequest:    confLogRequest(),
 		LogResponse:   confLogResponse(),
 		Debug:         confDebug(),
+		stopCallbacks: []AppCallback{},
 	}
 
 	// apply options
@@ -95,7 +98,22 @@ func (a *application) Client() *grpc.ClientConn {
 }
 
 func (a *application) Run() {
-	a.run()
+	a.listener = a.listen()
+	a.server.Serve(a.listener)
+}
+
+type AppCallback func() error
+
+func (a *application) OnStop(cb AppCallback) {
+	a.stopCallbacks = append(a.stopCallbacks, cb)
+}
+
+func (a *application) Stop() {
+	log.Printf("stop %v\n", a)
+	a.listener.Close()
+	for _, cb := range a.stopCallbacks {
+		cb()
+	}
 }
 
 func (a *application) PrintConfig() {
@@ -107,19 +125,22 @@ func (a *application) String() string {
 		a.Name, a.Host, a.Port, a.LogLevel, a.Debug)
 }
 
+func (a *application) ServerAddress() string {
+	return a.addr()
+}
+
 func (a *application) addr() string {
 	return fmt.Sprintf("%v:%v", a.Host, a.Port)
 }
 
-func (a *application) run() {
+func (a *application) listen() net.Listener {
 	addr := a.addr()
 	lis, err := net.Listen("tcp", a.addr())
 	if err != nil {
 		glog.FatalKV("failed to listen: %v", glog.Fields{"err": err, "address": addr})
 	}
 	log.Printf("server listening on %v\n", addr)
-
-	a.server.Serve(lis)
+	return lis
 }
 
 func applicationInterceptor(ctx context.Context, req interface{},
