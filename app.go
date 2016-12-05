@@ -89,7 +89,7 @@ func (a *application) Client() *grpc.ClientConn {
 	if addr == "" {
 		addr = a.addr()
 	}
-	conn, err := grpc.Dial(a.addr(), grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		glog.FatalKV("failed to connect", glog.Fields{"err": err, "address": addr})
 	}
