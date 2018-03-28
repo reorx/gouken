@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/context"
 
@@ -26,6 +27,7 @@ type application struct {
 	Debug         bool
 	// Server
 	server        *grpc.Server
+	serverOnce    sync.Once
 	Sopts         []grpc.ServerOption
 	stopCallbacks []AppCallback
 	listener      net.Listener
@@ -73,14 +75,14 @@ func (a *application) UseOptions(opts ...Option) {
 }
 
 func (a *application) Server() *grpc.Server {
-	if a.server == nil {
+	a.serverOnce.Do(func() {
 		// set logRequest & logResponse
 		logRequest = a.LogRequest
 		logResponse = a.LogResponse
 
 		// init server
 		a.server = grpc.NewServer(a.Sopts...)
-	}
+	})
 	return a.server
 }
 
