@@ -1,6 +1,0 @@
-port: 20001
-client_address: 127.0.0.1:20001
-log_request: false
-log_response: false
-# log_request: true
-# log_response: true
