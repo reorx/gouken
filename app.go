@@ -1,105 +1,65 @@
 package gouken
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"sync"
 
-	"golang.org/x/net/context"
-
-	glog "github.com/reorx/gouken/log"
-	"github.com/reorx/gouken/utils"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+
+	"github.com/reorx/gouken/utils"
 )
 
 type application struct {
-	// Options
-	Name          string
-	Host          string
-	Port          int
-	ClientAddress string
-	LogLevel      string
-	LogFilename   bool
-	LogRequest    bool
-	LogResponse   bool
-	Debug         bool
+	config Config
 	// Server
 	server        *grpc.Server
 	serverOnce    sync.Once
-	Sopts         []grpc.ServerOption
+	opts          []grpc.ServerOption
 	stopCallbacks []AppCallback
 	listener      net.Listener
-	// Client
 }
 
-var logResponse bool
-var logRequest bool
-
-func newApplication(opts ...Option) Application {
+func newApplication(config Config) Application {
+	if err := config.Check(); err != nil {
+		panic(err)
+	}
 	// init with config
 	a := &application{
-		Name:          confName(),
-		Host:          confHost(),
-		Port:          confPort(),
-		ClientAddress: confClientAddress(),
-		LogLevel:      confLogLevel(),
-		LogFilename:   confLogFilename(),
-		LogRequest:    confLogRequest(),
-		LogResponse:   confLogResponse(),
-		Debug:         confDebug(),
+		config:        config,
 		stopCallbacks: []AppCallback{},
 	}
 
-	// apply options
-	for _, o := range opts {
-		o(a)
-	}
-
-	// setup logging
-	glog.Setup(a.LogLevel, a.LogFilename)
-
 	// add interceptor
-	a.Sopts = append(a.Sopts, grpc.UnaryInterceptor(applicationInterceptor))
+	a.opts = append(a.opts, grpc.UnaryInterceptor(a.getApplicationInterceptor()))
 
 	// print application
-	log.Printf("%v created\n", a)
+	a.config.Logger.Infof("%v created", a)
 	return a
-}
-
-func (a *application) UseOptions(opts ...Option) {
-	for _, o := range opts {
-		o(a)
-	}
 }
 
 func (a *application) Server() *grpc.Server {
 	a.serverOnce.Do(func() {
-		// set logRequest & logResponse
-		logRequest = a.LogRequest
-		logResponse = a.LogResponse
-
 		// init server
-		a.server = grpc.NewServer(a.Sopts...)
+		a.server = grpc.NewServer(a.opts...)
 	})
 	return a.server
 }
 
 func (a *application) Client() *grpc.ClientConn {
-	addr := a.ClientAddress
-	if addr == "" {
-		addr = a.addr()
-	}
+	addr := a.config.addr()
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		glog.FatalKV("failed to connect", glog.Fields{"err": err, "address": addr})
+		a.config.Logger.WithError(err).WithField("address", addr).Panic("failed to connect")
 	}
-	log.Printf("client connected to %v", addr)
+	a.config.Logger.Infof("client connected to %v", addr)
 	return conn
 }
 
-func (a *application) Run() {
+func (a *application) MustRun() {
 	a.listener = a.listen()
 	a.server.Serve(a.listener)
 }
@@ -111,71 +71,61 @@ func (a *application) OnStop(cb AppCallback) {
 }
 
 func (a *application) Stop() {
-	log.Printf("stop %v\n", a)
+	a.config.Logger.Infof("stop %v", a)
 	a.listener.Close()
 	for _, cb := range a.stopCallbacks {
 		cb()
 	}
 }
 
-func (a *application) PrintConfig() {
-	PrintConfig()
-}
-
 func (a *application) String() string {
-	return fmt.Sprintf("<application: Name=%v Host=%v Port=%v LogLevel=%v Debug=%v>",
-		a.Name, a.Host, a.Port, a.LogLevel, a.Debug)
-}
-
-func (a *application) ServerAddress() string {
-	return a.addr()
-}
-
-func (a *application) addr() string {
-	return fmt.Sprintf("%v:%v", a.Host, a.Port)
+	return fmt.Sprintf("<application: Name=%v Host=%v Port=%v Debug=%v>",
+		a.config.Name, a.config.Host, a.config.Port, a.config.Debug,
+	)
 }
 
 func (a *application) listen() net.Listener {
-	addr := a.addr()
-	lis, err := net.Listen("tcp", a.addr())
+	addr := a.config.addr()
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		glog.FatalKV("failed to listen: %v", glog.Fields{"err": err, "address": addr})
+		a.config.Logger.WithError(err).WithField("address", addr).Panic("failed to listen on address")
 	}
-	log.Printf("server listening on %v\n", addr)
+	a.config.Logger.Infof("server listening on %v", addr)
 	return lis
 }
 
-func applicationInterceptor(ctx context.Context, req interface{},
-	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	s := strings.Split(info.FullMethod, "/")
-	method := s[len(s)-1]
-	// glog.Info("get request in interceptor 0 ", handler, req, ctx, info)
-	// glog.Info("get request in interceptor 1 ", info)
+func (a *application) getApplicationInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		s := strings.Split(info.FullMethod, "/")
+		method := s[len(s)-1]
+		// glog.Info("get request in interceptor 0 ", handler, req, ctx, info)
+		// glog.Info("get request in interceptor 1 ", info)
 
-	// call handler
-	t0 := utils.NowTimestamp(13)
+		// call handler
+		t0 := utils.NowTimestamp(13)
 
-	resp, err = handler(ctx, req)
+		resp, err = handler(ctx, req)
 
-	tc0 := utils.NowTimestamp(13) - t0
+		tc0 := utils.NowTimestamp(13) - t0
 
-	// log the call
-	kvs := glog.Fields{
-		"method": method,
-		"ms":     tc0,
+		// log the call
+		kvs := logrus.Fields{
+			"method": method,
+			"ms":     tc0,
+		}
+		if a.config.LogRequest {
+			kvs["request"] = req
+		}
+		if a.config.LogResponse {
+			kvs["response"] = resp
+		}
+
+		message := "/" + method + " called"
+		if err != nil {
+			a.config.Logger.WithError(err).WithFields(kvs).Error(message)
+		} else {
+			a.config.Logger.WithFields(kvs).Info(message)
+		}
+		return resp, err
 	}
-	if logRequest {
-		kvs["request"] = req
-	}
-	if logResponse {
-		kvs["response"] = resp
-	}
-	logFunc := glog.InfoKV
-	if err != nil {
-		kvs["err"] = err
-		logFunc = glog.ErrorKV
-	}
-	logFunc("/"+method+" called", kvs)
-
-	return resp, err
 }

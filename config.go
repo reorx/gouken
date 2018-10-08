@@ -1,153 +1,29 @@
 package gouken
 
-/*
-config.go is decoupled from app.go
-*/
-
 import (
 	"fmt"
-	"log"
-	"os"
-	"sort"
-	"strings"
 
-	"github.com/spf13/viper"
+	"github.com/sirupsen/logrus"
 )
 
-// defineConfig define config for options
-func defineConfig() {
-	viper.SetDefault("name", "")
-	viper.SetDefault("host", "localhost")
-	viper.SetDefault("port", 20000)
-	viper.SetDefault("client_address", "")
-	viper.SetDefault("log_level", "INFO")
-	viper.SetDefault("log_filename", false)
-	viper.SetDefault("log_request", false)
-	viper.SetDefault("log_response", false)
-	viper.SetDefault("debug", true)
+type Config struct {
+	Name        string
+	Host        string
+	Port        int
+	Logger      *logrus.Logger
+	LogFilename bool
+	LogRequest  bool
+	LogResponse bool
+	Debug       bool
 }
 
-func confName() string {
-	return viper.GetString("name")
+func (c Config) addr() string {
+	return fmt.Sprintf("%v:%v", c.Host, c.Port)
 }
 
-func confHost() string {
-	return viper.GetString("host")
-}
-
-func confPort() int {
-	return viper.GetInt("port")
-}
-
-func confClientAddress() string {
-	return viper.GetString("client_address")
-}
-
-func confLogLevel() string {
-	return viper.GetString("log_level")
-}
-
-func confLogFilename() bool {
-	return viper.GetBool("log_filename")
-}
-
-func confLogRequest() bool {
-	return viper.GetBool("log_request")
-}
-
-func confLogResponse() bool {
-	return viper.GetBool("log_response")
-}
-
-func confDebug() bool {
-	return viper.GetBool("debug")
-}
-
-// ConfOption ..
-type ConfOption func()
-
-// MakeConfig ..
-func MakeConfig(filename string, opts ...ConfOption) {
-	sp := strings.Split(filename, ".")
-	if len(sp) != 2 {
-		log.Fatalf("Could not parse config filename correctly: %v", filename)
+func (c Config) Check() error {
+	if c.Logger == nil {
+		return fmt.Errorf("config's logger shoule not be nil")
 	}
-
-	viper.SetConfigName(sp[0])
-	viper.SetConfigType(sp[1])
-
-	// add cwd for config path
-	viper.AddConfigPath(".")
-
-	for _, o := range opts {
-		o()
-	}
-
-	// read config at last
-	ReadConfig()
-}
-
-// ConfPathEnv ..
-func ConfPathEnv(n string) ConfOption {
-	return func() {
-		p := os.Getenv(n)
-		log.Printf("%v: %v\n", n, p)
-		if p != "" {
-			viper.AddConfigPath(p)
-		}
-	}
-}
-
-// ConfEnvPrefix ..
-func ConfEnvPrefix(n string) ConfOption {
-	return func() {
-		viper.SetEnvPrefix(n)
-	}
-}
-
-// ConfBindEnv ..
-func ConfBindEnv(n string) ConfOption {
-	return func() {
-		viper.BindEnv(n)
-	}
-}
-
-// ConfNew ..
-func ConfNew(k string, v interface{}) ConfOption {
-	return func() {
-		viper.SetDefault(k, v)
-	}
-}
-
-// ReadConfig ..
-func ReadConfig() {
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
-}
-
-// PrintConfig ..
-func PrintConfig() {
-	log.Printf("Config:\n%v", GetConfigString("  "))
-}
-
-// GetConfigString format all configs to string
-func GetConfigString(prefix string) string {
-	s := ""
-	items := viper.AllSettings()
-	keys := make([]string, len(items))
-
-	// Sort keys
-	i := 0
-	for k := range items {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		s += fmt.Sprintf("%v%v: %v\n", prefix, k, items[k])
-	}
-	return s
+	return nil
 }
