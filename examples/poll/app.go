@@ -1,8 +1,9 @@
 package poll
 
 import (
-	"github.com/reorx/gouken"
+	"github.com/sirupsen/logrus"
 
+	"github.com/reorx/gouken"
 	pb "github.com/reorx/gouken/examples/poll/proto"
 	"github.com/reorx/gouken/examples/poll/service"
 )
@@ -26,16 +27,14 @@ func Client() pb.PollClient {
 
 // Init ..
 func Init() {
-	gouken.MakeConfig(
-		"config.yml",
-		gouken.ConfPathEnv("POLLPATH"),
-		gouken.ConfEnvPrefix("POLL"),
-		gouken.ConfBindEnv("debug"),
-	)
-
-	app = gouken.NewApplication(
-		gouken.Name("poll"),
-	)
+	app = gouken.NewApplication(gouken.Config{
+		Name:        "poll",
+		Host:        "127.0.0.1",
+		Port:        20001,
+		Logger:      logrus.New(),
+		LogRequest:  true,
+		LogResponse: true,
+	})
 
 	// Register handler
 	pb.RegisterPollServer(app.Server(), new(service.Poll))
