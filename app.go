@@ -12,23 +12,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-/*
-// Application is an interface for building and initialising application.
-type Application interface {
-	MustRun()
-	OnStop(AppCallback)
-	Stop()
-	Server() *grpc.Server
-	Client() *grpc.ClientConn
-}
-*/
-
 type Application struct {
 	config Config
 	// Server
 	server        *grpc.Server
 	serverOnce    sync.Once
-	opts          []grpc.ServerOption
+	serverOpts    []grpc.ServerOption
 	stopCallbacks []AppCallback
 	listener      net.Listener
 }
@@ -44,17 +33,23 @@ func NewApplication(config Config) *Application {
 	}
 
 	// add interceptor
-	a.opts = append(a.opts, grpc.UnaryInterceptor(a.getApplicationInterceptor()))
+	a.AppendServerOptions(
+		grpc.UnaryInterceptor(a.getApplicationInterceptor()),
+	)
 
 	// print application
 	a.config.Logger.Infof("%v created", a)
 	return a
 }
 
+func (a *Application) AppendServerOptions(serverOpts ...grpc.ServerOption) {
+	a.serverOpts = append(a.serverOpts, serverOpts...)
+}
+
 func (a *Application) Server() *grpc.Server {
 	a.serverOnce.Do(func() {
 		// init server
-		a.server = grpc.NewServer(a.opts...)
+		a.server = grpc.NewServer(a.serverOpts...)
 	})
 	return a.server
 }
