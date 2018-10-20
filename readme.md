@@ -3,6 +3,16 @@
 Simple wrapper around grpc-go, the scaffold to start building a grpc service.
 
 
+## Usage
+
+Check [examples/poll](blob/master/examples/poll/app.go)
+and [examples/poll/cmd/rpcserver](blob/master/examples/poll/cmd/rpcserver/main.go)
+to see examples of initializing and running a gouken application.
+
+You can also directly call `go run examples/poll/cmd/rpcserver/main.go` to start
+the example service.
+
+
 ## Development
 
 Use `dep init -v` to install the dependencies.
