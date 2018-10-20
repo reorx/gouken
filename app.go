@@ -7,13 +7,23 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/reorx/gouken/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-
-	"github.com/reorx/gouken/utils"
 )
 
-type application struct {
+/*
+// Application is an interface for building and initialising application.
+type Application interface {
+	MustRun()
+	OnStop(AppCallback)
+	Stop()
+	Server() *grpc.Server
+	Client() *grpc.ClientConn
+}
+*/
+
+type Application struct {
 	config Config
 	// Server
 	server        *grpc.Server
@@ -23,12 +33,12 @@ type application struct {
 	listener      net.Listener
 }
 
-func newApplication(config Config) Application {
+func NewApplication(config Config) *Application {
 	if err := config.Check(); err != nil {
 		panic(err)
 	}
 	// init with config
-	a := &application{
+	a := &Application{
 		config:        config,
 		stopCallbacks: []AppCallback{},
 	}
@@ -41,7 +51,7 @@ func newApplication(config Config) Application {
 	return a
 }
 
-func (a *application) Server() *grpc.Server {
+func (a *Application) Server() *grpc.Server {
 	a.serverOnce.Do(func() {
 		// init server
 		a.server = grpc.NewServer(a.opts...)
@@ -49,7 +59,7 @@ func (a *application) Server() *grpc.Server {
 	return a.server
 }
 
-func (a *application) Client() *grpc.ClientConn {
+func (a *Application) Client() *grpc.ClientConn {
 	addr := a.config.addr()
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
@@ -59,18 +69,18 @@ func (a *application) Client() *grpc.ClientConn {
 	return conn
 }
 
-func (a *application) MustRun() {
+func (a *Application) MustRun() {
 	a.listener = a.listen()
 	a.server.Serve(a.listener)
 }
 
 type AppCallback func() error
 
-func (a *application) OnStop(cb AppCallback) {
+func (a *Application) OnStop(cb AppCallback) {
 	a.stopCallbacks = append(a.stopCallbacks, cb)
 }
 
-func (a *application) Stop() {
+func (a *Application) Stop() {
 	a.config.Logger.Infof("stop %v", a)
 	a.listener.Close()
 	for _, cb := range a.stopCallbacks {
@@ -78,13 +88,13 @@ func (a *application) Stop() {
 	}
 }
 
-func (a *application) String() string {
+func (a *Application) String() string {
 	return fmt.Sprintf("<application: Name=%v Host=%v Port=%v Debug=%v>",
 		a.config.Name, a.config.Host, a.config.Port, a.config.Debug,
 	)
 }
 
-func (a *application) listen() net.Listener {
+func (a *Application) listen() net.Listener {
 	addr := a.config.addr()
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -94,7 +104,7 @@ func (a *application) listen() net.Listener {
 	return lis
 }
 
-func (a *application) getApplicationInterceptor() grpc.UnaryServerInterceptor {
+func (a *Application) getApplicationInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		s := strings.Split(info.FullMethod, "/")
 		method := s[len(s)-1]
