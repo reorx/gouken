@@ -8,13 +8,15 @@ import (
 )
 
 func main() {
-	app := poll.App()
-	app.OnStop(func() error {
+	app := poll.NewApp()
+	app.InitServer()
+
+	app.GApp.OnStop(func() error {
 		log.Println("call stop callback")
 		return nil
 	})
-	go app.MustRun()
+	go app.GApp.MustRun()
 
 	time.Sleep(time.Duration(3) * time.Second)
-	app.Stop()
+	app.GApp.Stop()
 }
