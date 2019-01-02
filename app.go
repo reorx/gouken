@@ -7,9 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/reorx/gouken/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+
+	"github.com/reorx/gouken/utils"
 )
 
 type Application struct {
@@ -31,11 +32,6 @@ func NewApplication(config Config) *Application {
 		config:        config,
 		stopCallbacks: []AppCallback{},
 	}
-
-	// add interceptor
-	a.AppendServerOptions(
-		grpc.UnaryInterceptor(a.getApplicationInterceptor()),
-	)
 
 	// print application
 	a.config.Logger.Infof("%v created", a)
@@ -99,7 +95,11 @@ func (a *Application) listen() net.Listener {
 	return lis
 }
 
-func (a *Application) getApplicationInterceptor() grpc.UnaryServerInterceptor {
+func (a *Application) SetDefaultInterceptor() {
+	a.AppendServerOptions(grpc.UnaryInterceptor(a.LoggingInterceptor()))
+}
+
+func (a *Application) LoggingInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		s := strings.Split(info.FullMethod, "/")
 		method := s[len(s)-1]
