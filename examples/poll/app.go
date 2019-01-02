@@ -21,6 +21,7 @@ func NewApp() *App {
 		LogRequest:  true,
 		LogResponse: true,
 	})
+	gapp.SetDefaultInterceptor()
 
 	app := &App{
 		GApp: gapp,

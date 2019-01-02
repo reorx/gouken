@@ -95,11 +95,11 @@ func (a *Application) listen() net.Listener {
 	return lis
 }
 
-func (a *Application) ApplicationLoggingInterceptor() grpc.UnaryServerInterceptor {
-	return a.getApplicationInterceptor()
+func (a *Application) SetDefaultInterceptor() {
+	a.AppendServerOptions(grpc.UnaryInterceptor(a.LoggingInterceptor()))
 }
 
-func (a *Application) getApplicationInterceptor() grpc.UnaryServerInterceptor {
+func (a *Application) LoggingInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		s := strings.Split(info.FullMethod, "/")
 		method := s[len(s)-1]
