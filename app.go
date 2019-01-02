@@ -21,6 +21,7 @@ type Application struct {
 	serverOpts    []grpc.ServerOption
 	stopCallbacks []AppCallback
 	listener      net.Listener
+	MethodOptions map[string]MethodOption
 }
 
 func NewApplication(config Config) *Application {
@@ -31,6 +32,7 @@ func NewApplication(config Config) *Application {
 	a := &Application{
 		config:        config,
 		stopCallbacks: []AppCallback{},
+		MethodOptions: map[string]MethodOption{},
 	}
 
 	// print application
@@ -113,18 +115,27 @@ func (a *Application) LoggingInterceptor() grpc.UnaryServerInterceptor {
 
 		tc0 := utils.NowTimestamp(13) - t0
 
-		// log the call
+		// prepare logging values
 		kvs := logrus.Fields{
 			"method": method,
 			"ms":     tc0,
 		}
-		if a.config.LogRequest {
+
+		// get method option
+		mopt, ok := a.MethodOptions[method]
+		if !ok {
+			mopt.LogRequest = a.config.LogRequest
+			mopt.LogResponse = a.config.LogResponse
+		}
+
+		if mopt.LogRequest {
 			kvs["request"] = req
 		}
-		if a.config.LogResponse {
+		if mopt.LogResponse {
 			kvs["response"] = resp
 		}
 
+		// log the call
 		message := "/" + method + " called"
 		if err != nil {
 			a.config.Logger.WithError(err).WithFields(kvs).Error(message)
@@ -133,4 +144,13 @@ func (a *Application) LoggingInterceptor() grpc.UnaryServerInterceptor {
 		}
 		return resp, err
 	}
+}
+
+type MethodOption struct {
+	LogRequest  bool
+	LogResponse bool
+}
+
+func (a *Application) SetMethodOption(method string, mopt MethodOption) {
+	a.MethodOptions[method] = mopt
 }

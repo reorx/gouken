@@ -23,6 +23,8 @@ func NewApp() *App {
 	})
 	gapp.SetDefaultInterceptor()
 
+	gapp.SetMethodOption("AddCandidate", gouken.MethodOption{LogRequest: true, LogResponse: false})
+
 	app := &App{
 		GApp: gapp,
 	}
