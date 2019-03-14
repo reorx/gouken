@@ -138,7 +138,7 @@ func (a *Application) LoggingInterceptor() grpc.UnaryServerInterceptor {
 		// log the call
 		message := "/" + method + " called"
 		if err != nil {
-			a.config.Logger.WithError(err).WithFields(kvs).Error(message)
+			a.config.Logger.WithError(err).WithFields(kvs).Info(message)
 		} else {
 			a.config.Logger.WithFields(kvs).Info(message)
 		}
